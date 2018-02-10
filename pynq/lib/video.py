@@ -105,7 +105,7 @@ class HDMIInFrontend(DefaultHierarchy):
     def __init__(self, description):
         super().__init__(description)
 
-    def start(self, init_timeout=10):
+    def start(self, init_timeout=60):
         """Method that blocks until the video mode is
         successfully detected
 
@@ -122,12 +122,6 @@ class HDMIInFrontend(DefaultHierarchy):
         self._capture = pynq.lib._video._capture(gpio_dict,
                                                  vtc_capture_addr,
                                                  init_timeout)
-
-        while self.mode.height == 0:
-            pass
-        # First mode detected is garbage so wait a while for
-        # it to stabilise
-        time.sleep(1)
 
     def stop(self):
         """Currently empty function included for symmetry with
@@ -247,7 +241,7 @@ class _FrameCache:
         if self._cache:
             frame = _FrameCache._xlnk.cma_array(
                 shape=self._mode.shape, dtype='u1', cacheable=0,
-                pointer=self._cache.pop())
+                pointer=self._cache.pop(), cache=self)
         else:
             if _FrameCache._xlnk is None:
                 _FrameCache._xlnk = Xlnk()
@@ -259,13 +253,6 @@ class _FrameCache:
     def return_pointer(self, pointer):
         if len(self._cache) < self._capacity:
             self._cache.append(pointer)
-
-    def returnframe(self, frame):
-        frame.freebuffer = frame.original_freebuffer
-        if len(self._cache) >= self._capacity:
-            frame.freebuffer()
-        else:
-            self._cache.append(frame)
 
     def clear(self):
         self._cache.clear()
