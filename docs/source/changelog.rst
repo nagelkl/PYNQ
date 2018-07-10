@@ -2,6 +2,60 @@
 Change Log
 ************************
 
+Version 2.2 
+============================
+
+Image release: pynq_z2_v2.2
+
+Documentation updated 10 May 2018
+
+* Board Additions
+   * PYNQ-Z2 support added
+* New Microblaze Subsystems
+   * Added RPi Microblaze subsystem, bsp and notebooks
+* New IP
+   * Added audio with codec support
+
+
+Version 2.1 
+============================
+
+Image release: pynq_z1_v2.1
+
+Documentation updated 21 Feb 2018
+
+* Overlay Changes
+   * All overlays updated to build with Vivado 2017.4
+   * Hierarchical IPs' port names refactored for readability and portability
+   * The IOP hierarchical blocks are renamed from iop_1, 2, 3 to iop_pmoda, iop_pmodb, and iop_arduino
+   * The Microblaze subsystem I/O controllers were renamed to be iop agnostic
+* Base Overlay Changes
+   * The onboard switches and LEDs controlled are now controlled by two AXI_GPIO IPs.
+   * The 2nd I2C (shared) from the Arduino IOP was removed
+* IP Changes
+   * IP refactored for better portability to new boards and interfaces
+   * IO Switch now with configuration options for pmod, arduino, dual pmod,
+     and custom I/O connectivity
+   * IO Switch now with standard I/O controller interfaces for IIC and SPI
+* Linux changes   
+   * Updated to Ubuntu 16.04 LTS (Xenial)
+   * Updated kernel to tagged 2017.4 Xilinx release.
+   * Jupyter now listens on both :80 and :9090 ports
+   * opencv2.4.9 removed
+* Microblaze Programming
+   * IPython magics added for Jupyter programming of Microblazes
+   * Microblaze pyprintf, RPC, and Python-callable function generation added.
+   * New notebooks added to demonstrate the programming APIs
+* Repository Changes
+   * Repository pynqmicroblaze now a package to support Microblaze programming
+* Pynq API Changes
+   * Audio class renamed to AudioDirect to allow for future audio codec classes
+* New Python Packages 
+   * netifaces, imutils, scikit-image
+* Device Updates
+   * Removed version-deprecated Grove-I2C Color Sensor
+
+
 Version 2.0
 ============================
 

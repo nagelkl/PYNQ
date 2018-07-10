@@ -22,7 +22,7 @@ multistrap
 git
 lib32z1
 lib32ncurses5
-lib32bz2-1.0
+libbz2-1.0
 lib32stdc++6
 libgnutls-dev
 libssl-dev
@@ -30,6 +30,11 @@ kpartx
 zerofree
 u-boot-tools
 EOT
+
+if [ "$EUID" -eq 0 ] ; then
+    echo "error: Please do not run as root."
+    exit 1
+fi
 
 failed=false
 for i in $DEPS ; do

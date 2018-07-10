@@ -18,8 +18,8 @@
 *
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* XILINX CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* XILINX  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
 * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
@@ -33,7 +33,16 @@
 /**
 *
 * @file xcpu_cortexa9.h
+* @addtogroup cpu_cortexa9_v2_1
+* @{
+* @details
 *
 * dummy file
+* MODIFICATION HISTORY:
 *
+* Ver   Who  Date     Changes
+* ----- ---- -------- ---------------------------------------------------------
+* 2.5   ms   04/18/17 Modified tcl file to add suffix U for XPAR_CPU_ID
+*                     parameter of cpu_cortexa9 in xparameters.h
 ******************************************************************************/
+/** @} */

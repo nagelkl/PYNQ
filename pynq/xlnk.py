@@ -82,7 +82,8 @@ class ContiguousArray(np.ndarray):
 
         """
         if hasattr(self, 'pointer') and self.pointer:
-            self.allocator.cma_free(self.pointer)
+            if self.return_to:
+                self.return_to.return_pointer(self.pointer)
             self.pointer = 0
 
     def close(self):
@@ -92,6 +93,20 @@ class ContiguousArray(np.ndarray):
 
         """
         self.freebuffer()
+
+    def flush(self):
+        """Flush the underlying memory if necessary
+
+        """
+        if self.cacheable:
+            Xlnk.libxlnk.cma_flush_cache(self.pointer, self.physical_address, self.nbytes)
+
+    def invalidate(self):
+        """Invalidate the underlying memory if necessary
+
+        """
+        if self.cacheable:
+            Xlnk.libxlnk.cma_invalidate_cache(self.pointer, self.physical_address, self.nbytes)
 
     def __enter__(self):
         return self
@@ -127,12 +142,14 @@ class Xlnk:
 
     ffi.cdef("""
     static uint32_t xlnkBufCnt = 0;
-    uint32_t cma_mmap(uint32_t phyAddr, uint32_t len);
-    uint32_t cma_munmap(void *buf, uint32_t len);
+    unsigned long cma_mmap(uint32_t phyAddr, uint32_t len);
+    unsigned long cma_munmap(void *buf, uint32_t len);
     void *cma_alloc(uint32_t len, uint32_t cacheable);
-    uint32_t cma_get_phy_addr(void *buf);
+    unsigned long cma_get_phy_addr(void *buf);
     void cma_free(void *buf);
     uint32_t cma_pages_available();
+    void cma_flush_cache(void* buf, unsigned int phys_addr, int size);
+    void cma_invalidate_cache(void* buf, unsigned int phys_addr, int size);
     void _xlnk_reset();
     """)
     if CPU_ARCH_IS_SUPPORTED:
@@ -264,7 +281,8 @@ class Xlnk:
         self.__check_buftype(buf)
         return self.ffi.buffer(buf, length)
     
-    def cma_array(self, shape, dtype=np.uint32):
+    def cma_array(self, shape, dtype=np.uint32, cacheable=0,
+                  pointer=None, cache=None):
         """Get a contiguously allocated numpy array
 
         Create a numpy array with physically contiguously array. The
@@ -281,6 +299,8 @@ class Xlnk:
             The dimensions of the array to construct
         dtype : numpy.dtype or str
             The data type to construct - defaults to 32-bit unsigned int
+        cacheable : int
+            Whether the buffer should be cacheable - defaults to 0
 
         Returns
         -------
@@ -293,13 +313,17 @@ class Xlnk:
         dtype = np.dtype(dtype)
         elements = functools.reduce(lambda value, total: value * total, shape)
         length = elements * dtype.itemsize
-        buffer_pointer = self.cma_alloc(length)
-        buffer = self.cma_get_buffer(buffer_pointer, length)
+        if pointer is None:
+            raw_pointer = self.cma_alloc(length, cacheable=cacheable)
+            pointer = self.ffi.gc(raw_pointer, self.cma_free, size=length)
+        buffer = self.cma_get_buffer(pointer, length)
         array = np.frombuffer(buffer, dtype=dtype).reshape(shape)
         view = array.view(ContiguousArray)
         view.allocator = self
-        view.pointer = buffer_pointer
+        view.pointer = pointer
         view.physical_address = self.cma_get_phy_addr(view.pointer)
+        view.cacheable = cacheable
+        view.return_to = cache
         return view
 
     def cma_get_phy_addr(self, buf_ptr):

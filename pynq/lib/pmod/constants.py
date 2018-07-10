@@ -37,16 +37,17 @@ __email__ = "pynq_support@xilinx.com"
 
 # Microblaze constants
 BIN_LOCATION = os.path.dirname(os.path.realpath(__file__)) + "/"
+BSP_LOCATION = os.path.join(BIN_LOCATION, "bsp_iop_pmod")
 
 # PYNQ-Z1 constants
-PMODA = {'ip_name': 'iop1/mb_bram_ctrl',
-         'rst_name': 'mb_iop1_reset',
-         'intr_pin_name': 'iop1/dff_en_reset_0/q',
-         'intr_ack_name': 'mb_iop1_intr_ack'}
-PMODB = {'ip_name': 'iop2/mb_bram_ctrl',
-         'rst_name': 'mb_iop2_reset',
-         'intr_pin_name': 'iop2/dff_en_reset_0/q',
-         'intr_ack_name': 'mb_iop2_intr_ack'}
+PMODA = {'ip_name': 'iop_pmoda/mb_bram_ctrl',
+         'rst_name': 'mb_iop_pmoda_reset',
+         'intr_pin_name': 'iop_pmoda/dff_en_reset_vector_0/q',
+         'intr_ack_name': 'mb_iop_pmoda_intr_ack'}
+PMODB = {'ip_name': 'iop_pmodb/mb_bram_ctrl',
+         'rst_name': 'mb_iop_pmodb_reset',
+         'intr_pin_name': 'iop_pmodb/dff_en_reset_vector_0/q',
+         'intr_ack_name': 'mb_iop_pmodb_intr_ack'}
 
 # Pmod mailbox constants
 MAILBOX_OFFSET = 0xF000
@@ -61,39 +62,32 @@ READ_CMD = 1
 IOP_MMIO_REGSIZE = 0x10000
 
 # Pmod switch register map
-PMOD_SWITCHCONFIG_BASEADDR = 0x44A00000
-PMOD_SWITCHCONFIG_NUMREGS = 8
+PMOD_SWITCHCONFIG_BASEADDR = 0x44A20000
+PMOD_SWITCHCONFIG_NUMREGS = 2
 
 # Each Pmod pin can be tied to digital IO, SPI, or IIC
 PMOD_NUM_DIGITAL_PINS = 8
-PMOD_SWCFG_DIO0 = 0
-PMOD_SWCFG_DIO1 = 1
-PMOD_SWCFG_DIO2 = 2
-PMOD_SWCFG_DIO3 = 3
-PMOD_SWCFG_DIO4 = 4
-PMOD_SWCFG_DIO5 = 5
-PMOD_SWCFG_DIO6 = 6
-PMOD_SWCFG_DIO7 = 7
-PMOD_SWCFG_IIC0_SCL = 8
-PMOD_SWCFG_IIC0_SDA = 9
+PMOD_SWCFG_GPIO = 0x0
+PMOD_SWCFG_SDA0 = 0xC
+PMOD_SWCFG_SCL0 = 0xD
 
 # Switch config - all digital IOs
-PMOD_SWCFG_DIOALL = [PMOD_SWCFG_DIO0, PMOD_SWCFG_DIO1,
-                     PMOD_SWCFG_DIO2, PMOD_SWCFG_DIO3,
-                     PMOD_SWCFG_DIO4, PMOD_SWCFG_DIO5,
-                     PMOD_SWCFG_DIO6, PMOD_SWCFG_DIO7]
+PMOD_SWCFG_DIOALL = [PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                     PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                     PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                     PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO]
 
 # Switch config - IIC0, top row
-PMOD_SWCFG_IIC0_TOPROW = [PMOD_SWCFG_DIO0, PMOD_SWCFG_DIO1,
-                          PMOD_SWCFG_IIC0_SCL, PMOD_SWCFG_IIC0_SDA,
-                          PMOD_SWCFG_DIO2, PMOD_SWCFG_DIO3,
-                          PMOD_SWCFG_DIO4, PMOD_SWCFG_DIO5]
+PMOD_SWCFG_IIC0_TOPROW = [PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                          PMOD_SWCFG_SCL0, PMOD_SWCFG_SDA0,
+                          PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                          PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO]
 
 # Switch config - IIC0, bottom row
-PMOD_SWCFG_IIC0_BOTROW = [PMOD_SWCFG_DIO0, PMOD_SWCFG_DIO1,
-                          PMOD_SWCFG_DIO2, PMOD_SWCFG_DIO3,
-                          PMOD_SWCFG_DIO4, PMOD_SWCFG_DIO5,
-                          PMOD_SWCFG_IIC0_SCL, PMOD_SWCFG_IIC0_SDA]
+PMOD_SWCFG_IIC0_BOTROW = [PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                          PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                          PMOD_SWCFG_GPIO, PMOD_SWCFG_GPIO,
+                          PMOD_SWCFG_SCL0, PMOD_SWCFG_SDA0]
 
 # IIC register map
 PMOD_XIIC_0_BASEADDR = 0x40800000

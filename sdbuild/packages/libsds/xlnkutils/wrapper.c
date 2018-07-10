@@ -1,7 +1,14 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include "libxlnk_cma.h"
+#include <linux/ioctl.h>
+#include <errno.h>
+#include <dlfcn.h>
+
+#define RESET_IOCTL _IOWR('X', 101, unsigned long)
 
 /* Function prototypes from sdslib */
 void *sds_alloc_cacheable(uint32_t len);
@@ -10,13 +17,36 @@ void sds_free(void*);
 void *sds_mmap(void *phy_addr, size_t size, void *virtual_addr);
 void sds_munmap(void *virtal_addr);
 
+
+
 /* CF helper functions */
-void cf_xlnk_open(int last);
-void cf_xlnk_init(int arg);
+int cf_xlnk_open(int last) {
+    static void (*next_ptr)(int) = NULL;
+    if (!next_ptr) {
+        *(void**)(&next_ptr) = dlsym(RTLD_NEXT, "cf_xlnk_open");
+        next_ptr(1);
+    }
+}
+void cf_xlnk_init(int first) {
+    static void (*next_ptr)(int) = NULL;
+    if (!next_ptr) {
+        *(void**)(&next_ptr) = dlsym(RTLD_NEXT, "cf_xlnk_init");
+        next_ptr(1);
+    }
+}
+void cf_context_init(void) {
+    static void (*next_ptr)(void) = NULL;
+    if (!next_ptr) {
+        *(void**)(&next_ptr) = dlsym(RTLD_NEXT, "cf_context_init");
+        next_ptr();
+    }
+}
 
 /* Functional prototpes from xlnk */
 
 unsigned long xlnkGetBufPhyAddr(void*);
+extern void xlnkFlushCache(unsigned int phys_addr, int size);
+extern void xlnkInvalidateCache(unsigned int phys_addr, int size);
 
 /* Required to avoid undefined symbol error */
 void add_sw_estimates(void) {}
@@ -74,13 +104,54 @@ void cma_free(void *buf) {
 void _xlnk_reset() {
     /* This performs the correct ioctl but probably isn't
        particularly stable as a behaviour */
-    cf_xlnk_init(1);
+    int xlnkfd = open("/dev/xlnk", O_RDWR | O_CLOEXEC);
+    if (xlnkfd < 0) {
+        printf("Reset failed - could not open device: %d\n", xlnkfd);
+        return;
+    }
+    if (ioctl(xlnkfd, RESET_IOCTL, 0) < 0) {
+        printf("Reset failed - IOCTL failed: %d\n", errno);
+    }
+    close(xlnkfd);
 }
 
 /* Constructor to Open xlnk device */
 
 __attribute__((constructor))
 void open_xlnk(void) {
+    cf_context_init();
     cf_xlnk_open(1);
+    cf_xlnk_init(1);
 }
 
+void cma_flush_cache(void* buf, unsigned int phys_addr, int size) {
+#ifdef __aarch64__
+    uintptr_t begin = (uintptr_t)buf;
+    uintptr_t line = begin &~0x3FULL;
+    uintptr_t end = begin + size;
+
+    uintptr_t stride = 64; // TODO: Make this architecture dependent
+
+    asm volatile(
+    "loop:\n\t"
+    "dc civac, %[line]\n\t"
+    "add %[line], %[line], %[stride]\n\t"
+    "cmp %[line], %[end]\n\t"
+    "b.lt loop\n\t"
+    ::[line] "r" (line),
+    [stride] "r" (stride),
+    [end] "r" (end)
+    : "cc", "memory"
+    );
+#else
+    xlnkFlushCache(phys_addr, size);
+#endif
+}
+
+void cma_invalidate_cache(void* buf, unsigned int phys_addr, int size) {
+#ifdef __aarch64__
+    cma_flush_cache(buf, size);
+#else
+    xlnkInvalidateCache(phys_addr, size);
+#endif
+}

@@ -4,18 +4,17 @@
 PYNQ SD Card
 ************
 
-The PYNQ image for the PYNQ-Z1 is provided precompiled as a downloadable SD card
-image, so you do not need to rerun this flow for the PYNQ-Z1 unless you want to
-make changes to the image flow.
+The PYNQ image for the PYNQ-Z1 and PYNQ-Z2 boards are provided precompiled as 
+downloadable SD card images, so you do not need to rerun this flow for these 
+boards unless you want to make changes to the image flow.
 
 This flow can also be used as a starting point to build a PYNQ image for another
 Zynq board.
 
-The image flow will create the Zynq BOOT.bin, the u-boot bootloaded, the Linux
+The image flow will create the Zynq BOOT.bin, the u-boot bootloader, the Linux
 Device tree blob, and the Linux kernel.
 
 The source files for the PYNQ image flow build can be found here:
-
 
 .. code-block:: console
     
@@ -33,8 +32,19 @@ and recent VM image is recommended. The flow provided has been tested on Ubuntu
 
 To build the image follow the steps below:
 
-  1. Install Vivado 2016.1 and Xilinx SDK 2016.1
+  1. Install the correct version of Vivado and SDK
   2. Install dependencies using the following script
+
+The correct version of the Vivado and SDK is shown below:
+
+================  ================
+Release version    Vivado and SDK
+================  ================
+v1.4               2015.4
+v2.0               2016.1
+v2.1               2017.4
+v2.2               2017.4
+================  ================
 
 .. code-block:: console
     
@@ -65,7 +75,7 @@ There is a standardised flow for Zynq-7000 boards defined in
 
 .. code-block:: console
     
-   <PYNQ repository>/sdbuild/Zynq7000.makefile
+   <PYNQ repository>/sdbuild/boot_configs/common/Zynq7000.makefile
 
 This file is customised by setting a number of variables and providing paths to
 some setup scripts. The Board-specific ``config`` file is by convention placed
@@ -82,7 +92,7 @@ Variables in config
 The config file must define several variables:
 
   * **BOARD**: e.g. PYNQ-Z1. This is used to customize some parts of the flow,
-    and will utimately be used by Python
+    and will ultimately be used by Python
   * **BOARD_PART**: e.g. xc7z020clg400-1. This is used to create a Vivado
     project and generate a Hardware Description File (.hdf) for use in Xilinx SDK.
   * **BOARD_CONSTRAINTS**: Path to the constraints file (.xdc) containing the
@@ -111,9 +121,9 @@ The SD Card build flow starts by creating a simple Vivado Project using the
 variables. This vivado project is used to generate a Hardware Description File
 (.hdf) for Xilinx SDK.
 
-Following the cration of the Hardware Description File, the First State
+Following the creation of the Hardware Description File, the First State
 Bootloader (FSBL) and Device Tree file are created. While the FSBL is not
-customisable, the device tree can be modified by addding or reconfiguring
+customisable, the device tree can be modified by adding or reconfiguring
 entries or by **BOARD_DTSI**.
 
 Next, the **LINUX_REPO** and **UBOOT_REPO** repositories are cloned, checked out
@@ -131,7 +141,17 @@ into a release which live in the following folder:
 A release is a single (.config) file defining the variables:
 
   * **BOOT_CONFIG**: Path to the name of the project folder in boot_configs
-  * **ROOTFS_CONFIG**: Should be Pynq-Z1-Wily
+  * **ROOTFS_CONFIG**: Should be consistent with the OS to be installed on board 
+    (e.g. Pynq-Z1-Xenial).
+
+================  ================
+Release version    OS
+================  ================
+v1.4               Ubuntu Wily
+v2.0               Ubuntu Wily
+v2.1               Ubuntu Xenial
+v2.2               Ubuntu Xenial
+================  ================
 
 While the root filesystem is designed around the Pynq-Z1 board it should work on
 any board with similar connectivity, i.e. PS attached Ethernet and USB host

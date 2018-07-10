@@ -9,23 +9,16 @@ the *PYNQ Grove Adapter* and on Arduino pins using the *PYNQ Shield*.
 Block Diagram
 -------------
 
-There are two connectors available to connect Grove peripherals to the PYNQ-Z1
-Board.
-
 Pmod
 ^^^^
 
 The first option for connecting Grove peripherals uses the Pmod PYNQ 
-MicroBlaze.
-
-.. image:: ../images/pmod.png
-   :align: center
-	
-Grove devices can be connected to PYNQ-Z1 through the Pmod ports using the 
-*PYNQ Grove Adapter*.
+MicroBlaze. Grove devices can be connected to a board through the Pmod ports 
+using the  *PYNQ Grove Adapter*.
 
 .. image:: ../images/pmod_grove_adapter.jpg
    :align: center
+
 
 On the *PYNQ Grove Adapter* G1 and G2 map to Pmod pins [0,4] and [1,5], which
 are connected to pins with pull-down resistors. Ports G1 and G2 support the SPI
@@ -35,6 +28,7 @@ resistors and support the IIC protocol and GPIO peripherals.
 
 .. image:: ../images/adapter_mapping.JPG
    :align: center
+   :scale: 75%
 
 ==========   =========================
 Peripheral   Grove Port
@@ -51,19 +45,21 @@ MicroBlaze.
 
 .. image:: ../images/arduino_iop.jpg
    :align: center
+   :scale: 75%
 	
-Grove devices can be connected to PYNQ-Z1 through the Arduino ports using the 
+Grove devices can be connected to a board through the Arduino interface using the 
 *PYNQ Shield*.
 
 .. image:: ../images/arduino_shield.jpg
    :align: center
+   :scale: 75%
 
 On the *PYNQ Shield* there are 4 IIC Grove connectors (labeled I2C), 8
 vertical Grove Connectors (labeled G1-G7 and UART), and four horizontal Grove
 Connectors (labeled A1-A4). The SCL and SDA pins are connected to the SCL and
 SDA pins on the Arduino header.
 
-The following table maps Grove Ports to communcation protocols.
+The following table maps Grove Ports to communication protocols.
 
 ==========   =========================
 Peripheral   Grove Port
@@ -81,7 +77,7 @@ A list of drivers provided for Grove peripherals can be found in
 Examples
 --------
 
-In :ref:`base-overlay`, two Pmod instances are available: PMODA and
+In :ref:`pynqz1-base-overlay`, two Pmod instances are available: PMODA and
 PMODB. After the overlay is loaded, the Grove peripherals can be accessed 
 as follows:
 
@@ -100,13 +96,13 @@ More information about the Grove drivers in the Pmod subpackage, the supported
 peripherals, and APIs can be found in :ref:`pynq-lib-pmod`.
 
 For more examples using the *PYNQ Grove Adapter*, see the notebooks in the 
-following directory on the PYNQ-Z1 board:
+following directory on the board:
 
 .. code-block:: console
 
    <Jupyter Dashboard>/base/pmod/
 
-In :ref:`base-overlay`, one Arduino PYNQ MicroBlaze instance is available. 
+In :ref:`pynqz1-base-overlay`, one Arduino PYNQ MicroBlaze instance is available. 
 After the overlay is loaded, the Grove peripherals can be accessed as follows:
 
 .. code-block:: Python
@@ -124,7 +120,7 @@ More information about the Grove drivers in the Arduino subpackage, the
 supported peripherals, and APIs can be found in :ref:`pynq-lib-arduino`.
 
 For more examples using the *PYNQ Shield*, see the notebooks in the following 
-directory on the PYNQ-Z1 board:
+directory on the board:
 
 .. code-block:: console
 

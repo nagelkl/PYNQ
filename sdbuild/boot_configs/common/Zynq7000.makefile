@@ -5,7 +5,7 @@ LINUX_MAKE_ARGS ?= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=2
 BOOT_BITSTREAM ?= ${WORKDIR}/PYNQ/boards/${BOARD}/base/base.bit
 
 DTC_REPO := https://github.com/Xilinx/device-tree-xlnx.git
-DTC_COMMIT := 11f81055d1afad67398fa5ef443b32be8bc74433
+DTC_COMMIT := xilinx-v2017.4
 
 export BOARD_PART
 export PS_CONFIG_TCL
@@ -15,13 +15,19 @@ SOURCEDIR := ${makefileDir}
 
 BOOT_FILES := ${OUTDIR}/devicetree.dtb ${OUTDIR}/uImage ${OUTDIR}/BOOT.bin ${OUTDIR}/uEnv.txt
 
-KERNEL_DEB := ${WORKDIR}/linux-headers-4.6.0-xilinx.deb
+KERNEL_HEADER_DEB := linux-headers-4.9.0-xilinx.deb
+KERNEL_IMAGE_DEB := linux-image-4.9.0-xilinx.deb
+
+export KERNEL_HEADER_DEB
+export KERNEL_IMAGE_DEB
+
+KERNEL_DEB := ${WORKDIR}/${KERNEL_HEADER_DEB}
 
 ${KERNEL_DEB}: ${WORKDIR}/linux/.config
 	-rm ${WORKDIR}/*.deb
 	cd ${WORKDIR}/linux && make ${LINUX_MAKE_ARGS} deb-pkg
-	mv ${WORKDIR}/linux-headers* ${WORKDIR}/linux-headers-4.6.0-xilinx.deb
-	mv ${WORKDIR}/linux-image* ${WORKDIR}/linux-image-4.6.0-xilinx.deb
+	mv ${WORKDIR}/linux-headers* ${WORKDIR}/${KERNEL_HEADER_DEB}
+	mv ${WORKDIR}/linux-image* ${WORKDIR}/${KERNEL_IMAGE_DEB}
 
 ${OUTDIR}/devicetree.dtb: ${WORKDIR}/pynq_dts/system.dts ${WORKDIR}/pynq_dts/board.dtsi | ${OUTDIR}
 	cd ${WORKDIR}/pynq_dts && bash ${SOURCEDIR}/compile_dtc.sh > $@

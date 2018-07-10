@@ -16,6 +16,7 @@ cffi
 matplotlib
 chardet
 html5lib
+tornado==4.5.3
 jupyter
 jupyterlab
 jupyter_contrib_nbextensions
@@ -39,7 +40,7 @@ xlrd
 XlsxWriter
 xlwt
 scipy
-Pillow
+Pillow==4.2.1
 pandas
 deltasigma
 seaborn
@@ -51,6 +52,14 @@ pycurl
 nbwavedrom
 Cython
 RISE
+netifaces
+imutils
+scikit-image
+dash
+dash-renderer
+dash-html-components
+dash-core-components
+plotly
 EOT
 
 pip3.6 install numpy requests

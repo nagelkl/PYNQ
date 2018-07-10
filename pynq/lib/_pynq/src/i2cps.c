@@ -54,7 +54,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <sys/ioctl.h>
 #include "i2cps.h"
 
 int setI2C(unsigned int index, long slave_addr){

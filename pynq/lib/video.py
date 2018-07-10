@@ -105,7 +105,7 @@ class HDMIInFrontend(DefaultHierarchy):
     def __init__(self, description):
         super().__init__(description)
 
-    def start(self, init_timeout=10):
+    def start(self, init_timeout=60):
         """Method that blocks until the video mode is
         successfully detected
 
@@ -122,12 +122,6 @@ class HDMIInFrontend(DefaultHierarchy):
         self._capture = pynq.lib._video._capture(gpio_dict,
                                                  vtc_capture_addr,
                                                  init_timeout)
-
-        while self.mode.height == 0:
-            pass
-        # First mode detected is garbage so wait a while for
-        # it to stabilise
-        time.sleep(1)
 
     def stop(self):
         """Currently empty function included for symmetry with
@@ -245,27 +239,22 @@ class _FrameCache:
 
         """
         if self._cache:
-            frame = self._cache.pop()
+            frame = _FrameCache._xlnk.cma_array(
+                shape=self._mode.shape, dtype='u1', cacheable=0,
+                pointer=self._cache.pop(), cache=self)
         else:
             if _FrameCache._xlnk is None:
                 _FrameCache._xlnk = Xlnk()
             frame = _FrameCache._xlnk.cma_array(
-                shape=self._mode.shape, dtype=np.uint8)
-        frame.original_freebuffer = frame.freebuffer
-        frame.freebuffer = functools.partial(
-            _FrameCache.returnframe, self, frame)
+                shape=self._mode.shape, dtype=np.uint8, cacheable=0,
+                cache=self)
         return frame
 
-    def returnframe(self, frame):
-        frame.freebuffer = frame.original_freebuffer
-        if len(self._cache) >= self._capacity:
-            frame.freebuffer()
-        else:
-            self._cache.append(frame)
+    def return_pointer(self, pointer):
+        if len(self._cache) < self._capacity:
+            self._cache.append(pointer)
 
     def clear(self):
-        for frame in self._cache:
-            frame.freebuffer()
         self._cache.clear()
 
 
@@ -319,8 +308,6 @@ class AxiVDMA(DefaultIP):
             return self.count
 
         def __setitem__(self, index, frame):
-            if self._frames[index] is not None:
-                self._frames[index].freebuffer()
             self._frames[index] = frame
             if frame is not None:
                 self._mmio.write(self._offset + 4 * index,
@@ -362,12 +349,14 @@ class AxiVDMA(DefaultIP):
             self._mode = None
 
         def _readframe_internal(self):
+            self.irqframecount = 1
             nextframe = self._cache.getframe()
-            previous_frame = (self.activeframe + 1) % len(self._frames)
+            previous_frame = (self.activeframe + 2) % len(self._frames)
             captured = self._frames[previous_frame]
             self._frames.takeownership(previous_frame)
             self._frames[previous_frame] = nextframe
-            self.irqframecount = 1
+            post_frame = (self.activeframe + 2) % len(self._frames)
+            captured.invalidate()
             return captured
 
         def readframe(self):
@@ -390,6 +379,7 @@ class AxiVDMA(DefaultIP):
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(
                     asyncio.ensure_future(self._interrupt.wait()))
+                pass
             self._mmio.write(0x34, 0x1000)
             return self._readframe_internal()
 
@@ -623,6 +613,7 @@ class AxiVDMA(DefaultIP):
             if self.sourcechannel:
                 self.sourcechannel.tie(None)
 
+            frame.flush()
             next_frame = (self.desiredframe + 1) % len(self._frames)
             self._frames[next_frame] = frame
             self.desiredframe = next_frame
@@ -773,7 +764,8 @@ class AxiVDMA(DefaultIP):
         self.readchannel = AxiVDMA.S2MMChannel(self, self.s2mm_introut)
         self.writechannel = AxiVDMA.MM2SChannel(self, self.mm2s_introut)
 
-    bindto = ['xilinx.com:ip:axi_vdma:6.2']
+    bindto = ['xilinx.com:ip:axi_vdma:6.2',
+              'xilinx.com:ip:axi_vdma:6.3']
 
 
 class ColorConverter(DefaultIP):
