@@ -39,6 +39,7 @@ from pycparser import c_ast
 from pycparser import c_generator
 from pycparser.plyparser import ParseError
 from copy import deepcopy
+from pynq.ps import ZU_ARCH, CPU_ARCH, ZYNQ_ARCH
 
 from .compile import preprocess
 from .streams import SimpleMBStream
@@ -49,6 +50,12 @@ from . import MicroblazeProgram
 _parser = pycparser.CParser()
 _generator = c_generator.CGenerator()
 
+if CPU_ARCH == ZYNQ_ARCH:
+    PTR_OFFSET = "0x20000000"
+elif CPU_ARCH == ZU_ARCH:
+    PTR_OFFSET = "0x80000000"
+else:
+    PTR_OFFSET = "0x0"
 
 # First we define a series of classes to represent types
 # Each class is responsible for one particular type of C
@@ -114,7 +121,7 @@ class VoidPointerWrapper:
         commands.append(c_ast.Assignment(
             '|=',
             c_ast.ID(name + '_int'),
-            c_ast.Constant('int', '0x20000000')))
+            c_ast.Constant('int', PTR_OFFSET)))
         commands.append(
             c_ast.Decl(name, [], [], [],
                        c_ast.PtrDecl(
@@ -269,9 +276,9 @@ def _type_to_struct_string(tdecl):
                 return 'Q'
         else:
             if signed:
-                return 'l'
+                return 'i'
             else:
-                return 'L'
+                return 'I'
     if name == 'short':
         if signed:
             return 'h'
@@ -620,8 +627,11 @@ def _pyprintf(stream):
     args = []
     for i in range(len(format_string)):
         if in_special:
-            if format_string[i:i+1] in [b'd', b'x', b'X', b'o', b'u']:
+            if format_string[i:i+1] in [b'd']:
                 args.append(stream.read_int32())
+            elif format_string[i:i+1] in [b'x', b'X', b'o', b'u']:
+                # perform unsigned conversion
+                args.append(stream.read_uint32())
             elif format_string[i:i+1] in [b'f', b'F', b'g', b'G', b'e', b'E']:
                 args.append(stream.read_float())
             elif format_string[i:i+1] == b's':
@@ -649,7 +659,7 @@ def _function_wrapper(stream, index, adapter, return_type, *args):
     with functools.partial to build a new thing
 
     """
-    arg_string = struct.pack('l', index)
+    arg_string = struct.pack('i', index)
     arg_string += adapter.pack_args(*args)
     stream.write(arg_string)
     if not adapter.returns:
@@ -720,7 +730,7 @@ class MicroblazeFunction:
         self.return_type = return_type
 
     def _call_function(self, *args):
-        arg_string = struct.pack('l', self.index)
+        arg_string = struct.pack('i', self.index)
         arg_string += self.function.pack_args(*args)
         self.stream.write(arg_string)
 

@@ -28,15 +28,13 @@
 #   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import warnings
 import weakref
+from .ps import CPU_ARCH, ZU_ARCH, ZYNQ_ARCH
 
 __author__ = "Yun Rock Qu"
 __copyright__ = "Copyright 2016, Xilinx"
 __email__ = "pynq_support@xilinx.com"
-
-# GPIO constants
-GPIO_MIN_USER_PIN = 54
-
 
 class _GPIO:
     """Internal Helper class to wrap Linux's GPIO Sysfs API.
@@ -140,6 +138,15 @@ class GPIO:
 
     """
 
+    if CPU_ARCH == ZYNQ_ARCH:
+        _GPIO_MIN_USER_PIN = 54
+    elif CPU_ARCH == ZU_ARCH:
+        _GPIO_MIN_USER_PIN = 78
+    else:
+        warnings.warn("Pynq does not support the CPU Architecture: {}"
+                      .format(CPU_ARCH), ResourceWarning)
+
+
     def __init__(self, gpio_index, direction):
         """Return a new GPIO object.
 
@@ -225,7 +232,10 @@ class GPIO:
         for root, dirs, files in os.walk('/sys/class/gpio'):
             for name in dirs:
                 if 'gpiochip' in name:
-                    return int(''.join(x for x in name if x.isdigit()))
+                    with open(os.path.join(root, name, "label")) as fd:
+                        label = fd.read().rstrip()
+                    if label in ['zynqmp_gpio', 'zynq_gpio']:
+                        return int(''.join(x for x in name if x.isdigit()))
 
     @staticmethod
     def get_gpio_pin(gpio_user_index):
@@ -252,5 +262,5 @@ class GPIO:
             The Linux Sysfs GPIO pin number.
 
         """
-        return (GPIO.get_gpio_base() + GPIO_MIN_USER_PIN +
+        return (GPIO.get_gpio_base() + GPIO._GPIO_MIN_USER_PIN +
                 gpio_user_index)

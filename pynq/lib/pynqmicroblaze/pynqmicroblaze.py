@@ -258,7 +258,7 @@ class PynqMicroblaze:
 
         """
         self.reset()
-        PL.load_ip_data(self.ip_name, self.mb_program)
+        PL.load_ip_data(self.ip_name, self.mb_program, zero=True)
         if self.interrupt:
             self.interrupt.clear()
         self.run()
@@ -320,19 +320,24 @@ class MicroblazeHierarchy(DefaultHierarchy):
     def __init__(self, description, mbtype="Unknown"):
         super().__init__(description)
         hier = description['fullpath']
+        if hier.count('/') > 0:
+            parent, _, ip = hier.rpartition('/')
+            container = "{}/".format(parent)
+        else:
+            container = ""
+            ip = hier
         self.mb_info = {'ip_name': '{}/mb_bram_ctrl'.format(hier),
-                        'rst_name': 'mb_{}_reset'.format(hier),
+                        'rst_name': '{}mb_{}_reset'.format(container,ip),
                         'intr_pin_name': '{}/dff_en_reset_vector_0/q'.format(
                             hier),
-                        'intr_ack_name': 'mb_{}_intr_ack'.format(hier),
+                        'intr_ack_name': '{}mb_{}_intr_ack'.format(container,ip),
                         'mbtype': mbtype,
                         'name' : hier}
 
     @property
     def mbtype(self):
-        """The defined type of the microblaze subsystem. Used by driver programs
-        to limit what microblaze subsystems the program is run on. The Pynq-Z1
-        base overlay has 'Ardiuno' and 'Pmod' microblaze types.
+        """The defined type of the microblaze subsystem. Used by driver 
+        programs to limit what microblaze subsystems the program is run on.
 
         """
         return self.mb_info['mbtype']
